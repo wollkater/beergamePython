@@ -1,14 +1,13 @@
-from flask import Flask, render_template, request, redirect, jsonify, url_for, flash, make_response
+from flask import Flask, request, jsonify
 from flask import session as user_session
-from sqlalchemy import or_
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
 
 from db_init import Contract, Base, engine, GameSession, Company, Storage, SessionCompany
 
 app = Flask(__name__)
 
-
-#Connect to Database and create database session
+# Connect to Database and create database session
 Base.metadata.bind = engine
 db_session = sessionmaker(bind=engine)
 session = db_session()
@@ -18,31 +17,47 @@ session = db_session()
 def sessions():
     if request.method == 'POST':
         game_session = GameSession(name=request.form['name'])
+        company = Company(type="GM", costs=0, name="GameMaster")
+        session.add(company)
+        session.commit()
         session.add(game_session)
         session.commit()
 
-        user_session[game_session.id] = {"company": "GM"}
+        company_session = SessionCompany(session_id=game_session.id, company_id=company.id)
+        session.add(company_session)
+        session.commit()
 
-        return jsonify(game_seesion=game_session.serialize)
+        user_session[str(game_session.id)] = {"company": "GM", "company_id": company.id}
+
+        return jsonify(game_session=company_session.serialize)
     else:
         games = session.query(GameSession).all()
         return jsonify(games=[g.serialize for g in games])
 
 
-@app.route('/join', methods=['POST'])
-def join():
-
+@app.route('/<int:session_id>/join', methods=['POST'])
+def join(session_id):
     form = request.form
-    game_session_id = form['game_session']
 
-    if user_session[game_session_id] is None:
-        game_session = session.query(GameSession).filter_by(id = game_session_id).one()
+    if str(session_id) not in user_session:
+        game_session = session.query(GameSession).filter_by(id=session_id).one()
         company = Company(type=form['type'])
         user_session[game_session.id] = {"company": company.type.name, "company_id": company.id}
         return jsonify(company=company.serialize)
     else:
-        company = session.query(SessionCompany).filter_by(session_id=game_session_id).one().company
+        company = session.query(SessionCompany).filter_by(session_id=session_id).one().company
         return jsonify(company=company.serialize)
+
+
+@app.route('/<int:session_id>/availableCompanies')
+def availableCompanies(session_id):
+    companies = ("Brewery", "Store", "Wholesaler", "GM")
+
+    companies_in_use = session.query(SessionCompany).filter_by(session_id=session_id).all()
+    companies_in_use = [c.company.type for c in companies_in_use]
+    usable = [company for company in companies if company not in companies_in_use]
+
+    return jsonify(companies=usable)
 
 
 @app.route('/<int:session_id>/contracts', methods=['GET', 'POST'])
@@ -58,9 +73,56 @@ def contracts(session_id):
 
         return jsonify(contract=contract.serialize)
     else:
-        c_id = user_session.get(session_id).get('company_id')
-        contracts = session.query(Contract).filter(or_(Contract.purchaser == c_id, Contract.seller == c_id))
-        return jsonify(contracts=[c.serialize for c in contracts])
+        if str(session_id) in user_session:
+            c_id = user_session.get(str(session_id)).get('company_id')
+            bought = session.query(Contract).filter(Contract.purchaser == c_id)
+            sold = session.query(Contract).filter(Contract.seller == c_id)
+            return jsonify(bought=[b.serialize for b in bought],
+                           sold=[s.serialize for s in sold])
+
+        else:
+            print(user_session)
+            return {}
+
+
+@app.route('<int:session_id>/round/next', methods=['GET'])
+def nextRound(session_id):
+    if str(session_id) in user_session and user_session.get(str(session_id)).get("company") == "GM":
+        game_session = session.query(GameSession).filter_by(id=session_id).one()
+        game_session.current_round = game_session.current_round + 1
+        session.add(game_session)
+        session.commit()
+
+        companies = [c.company for c in session.query(SessionCompany).filter_by(session_id=session_id).all()]
+
+        for company in companies:
+            query = session.query(Contract).filter(Contract.seller_id == company.id)
+            query = query.filter(Contract.fulfilled is False)
+            query = query.filter(Contract.round_created >= game_session.current_round + 2)
+            contracts = query.all()
+
+            for contract in contracts:
+                query = session.query(Storage).filter(Storage.type == contract.resource)
+                try:
+                    resource_seller = query.filter(Storage.company_id == contract.seller_id).one()
+                except NoResultFound:
+                    resource_seller = None
+                try:
+                    resource_buyer = query.filter(Storage.company_id == contract.purchaser_id).one()
+                except NoResultFound:
+                    resource_buyer = Storage(resource=contract.resource, amount=0, company_id=contract.purchaser_id)
+                if resource_seller is None or resource_seller.amount < contract.amount:
+                    company.costs = company.costs + (10 * contract.amount)
+                    session.add(company)
+                    session.commit()
+                else:
+                    resource_seller.amount = resource_seller.amount - contract.amount
+                    session.add(resource_seller)
+                    resource_buyer.amount = resource_buyer.amount + contract.amount
+                    session.add(resource_buyer)
+                    session.commit()
+
+
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'

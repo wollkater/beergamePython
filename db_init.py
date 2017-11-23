@@ -1,10 +1,7 @@
-import enum
-import json
-
 from sqlalchemy import Column, ForeignKey, Integer, Enum, Text, Boolean
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy import create_engine
 
 Base = declarative_base()
 
@@ -20,7 +17,7 @@ class Company(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(Text, nullable=False)
-    type = Column('type', Enum("Brewery", "Store", "Wholeseller", "GM", name='company_type'))
+    type = Column('type', Enum("Brewery", "Store", "Wholesaler", "GM", name='company_type'))
     costs = Column(Integer)
 
 
@@ -30,8 +27,8 @@ class Company(Base):
         return {
             'name': self.name,
             'id': self.id,
-            'storage': self.storage,
-            'costs': self.costs
+            'costs': self.costs,
+            'type': self.type
         }
 
 class Storage(Base):
@@ -58,6 +55,7 @@ class GameSession(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(Text)
+    current_round = Column(Integer)
 
     @property
     def serialize(self):
@@ -77,6 +75,15 @@ class SessionCompany(Base):
     company_id = Column(Integer, ForeignKey('company.id'))
     company = relationship(Company)
 
+    @property
+    def serialize(self):
+        """Return object data in easily serializeable format"""
+        return {
+            'id': self.id,
+            'session': self.session.serialize,
+            'company': self.company.serialize
+        }
+
 
 class Contract(Base):
     __tablename__ = 'contract'
@@ -88,6 +95,7 @@ class Contract(Base):
     resource = Column('resource', Enum("Water", "Hop", "Beer", name='resource_type'))
     amount = Column(Integer)
     fulfilled = Column(Boolean)
+    round_created = Column(Integer)
 
 
     @property
