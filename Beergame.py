@@ -157,7 +157,7 @@ def nextRound(session_id):
                 session.add(company)
                 session.commit()
 
-@app.route('<int:session_id>/ready', methods=['GET', 'POST'])
+@app.route('/<int:session_id>/ready', methods=['GET', 'POST'])
 def ready(session_id):
     if request.method == 'POST':
         c_id = request.json['company_id']
