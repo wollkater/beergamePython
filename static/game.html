@@ -1,0 +1,62 @@
+<div class="row">
+    <div class="col col-md-4" style="text-align: left">
+        <h3>Geldausgabe {{money}}</h3>
+    </div>
+    <div class="col col-md-4" style="text-align: center">
+        <h1>{{company.name}}</h1>
+    </div>
+    <div class="col col-md-4" style="text-align: right">
+        <h3>Runde {{roundNumber}}</h3>
+    </div>
+</div>
+<div class="row">
+    <div class="col col-md-6 border">
+        <div style="text-align: center">
+            <h2>Bestellungseingang</h2>
+        </div>
+        <div style="margin: 20px 0 0 0;">
+            <h3>{{orderInput}}x Bierkästen</h3>
+        </div>
+    </div>
+    <div class="col col-md-6 border">
+        <div style="text-align: center">
+            <h2>Bestellungsausgang</h2>
+        </div>
+        <div style="margin: 20px 0 0 0;">
+            <h3>{{orderOutput}}x Bierkästen</h3>
+        </div>
+        <div style="margin: 10px 0 0 0;">
+            <button type="button" class="btn btn-success button-counter" ng-click="addOrderOutput()">+</button>
+            <button type="button" class="btn btn-danger button-counter" ng-click="remOrderOutput()">-</button>
+            <button type="button" class="btn btn-primary" ng-click="placeOrder()">Bestellen</button>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col col-md-6 border">
+        <div style="text-align: center">
+            <h2>Warenausgang</h2>
+        </div>
+        <div style="margin: 20px 0 0 0;">
+            <h3>{{output}}x Bierkästen</h3>
+        </div>
+    </div>
+    <div class="col col-md-6 border">
+        <div style="text-align: center">
+            <h2>Wareneingang</h2>
+        </div>
+        <div style="margin: 20px 0 0 0;">
+            <h3>{{input}}x Bierkästen</h3>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col col-md-12 border">
+        <div style="text-align: center">
+            <h2>Lager</h2>
+        </div>
+        <div style="margin: 20px 0 0 0;">
+            <h3>{{storage}}x Bierkästen</h3>
+        </div>
+    </div>
+</div>

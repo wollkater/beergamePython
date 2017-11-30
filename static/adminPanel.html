@@ -1,0 +1,15 @@
+<div class="row">
+    <div class="col col-md-12" style="text-align: center">
+        <h1>Beer Game: {{game.name}}</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col col-md-3" style="text-align: center">
+        <h2>Runde {{round}}</h2>
+    </div>
+    <div class="col col-md-6" style="text-align: center">
+        <input type="number" step="1" class="form-control" ng-model="order.amount" min="1" onkeypress='return (event.charCode >= 48 && event.charCode <= 57) || event.keyCode == 8'>
+        <button class="btn btn-primary btn-lg" style="margin: 15px 0 0 0;" ng-click="nextRound()">Bestellen und nächste Runde starten!</button>
+    </div>
+</div>
