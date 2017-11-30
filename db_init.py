@@ -5,13 +5,6 @@ from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
-db_host = 'localhost'
-db_port = '5432'
-db_name = 'beergame'
-db_user = 'plusservices'
-db_password = '#Gatter'
-
-
 class Company(Base):
     __tablename__ = 'company'
 
@@ -110,6 +103,6 @@ class Contract(Base):
         }
 
 
-engine = create_engine("postgresql://{}:{}@{}:{}/{}".format(db_user, db_password, db_host, db_port, db_name))
+engine = create_engine('sqlite:///bagelShop.db')
 
 Base.metadata.create_all(engine)

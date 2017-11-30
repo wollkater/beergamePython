@@ -11,6 +11,7 @@ app = Flask(__name__)
 Base.metadata.bind = engine
 db_session = sessionmaker(bind=engine)
 session = db_session()
+companies = ("Store", "Wholesaler", "Brewery", "GM")
 
 
 @app.route('/sessions', methods=['GET', 'POST'])
@@ -20,6 +21,7 @@ def sessions():
         company = Company(type="GM", costs=0, name="GameMaster")
         session.add(company)
         session.commit()
+
         session.add(game_session)
         session.commit()
 
@@ -51,7 +53,6 @@ def join(session_id):
 
 @app.route('/<int:session_id>/availableCompanies')
 def availableCompanies(session_id):
-    companies = ("Brewery", "Store", "Wholesaler", "GM")
 
     companies_in_use = session.query(SessionCompany).filter_by(session_id=session_id).all()
     companies_in_use = [c.company.type for c in companies_in_use]
@@ -63,7 +64,17 @@ def availableCompanies(session_id):
 @app.route('/<int:session_id>/contracts', methods=['GET', 'POST'])
 def contracts(session_id):
     if request.method == 'POST':
-        contract = Contract(seller_id=request.form['seller_id'],
+        buyer = session.query(Company).filter_by(id=request.form['buyer_id']).one()
+        try:
+            seller = companies[companies.index(buyer.type)+1]
+        except IndexError:
+            seller = companies[0]
+        query = session.query(SessionCompany)
+        query = query.filter(SessionCompany.session_id==session_id)
+        query = query.join(SessionCompany.company).filter(Company.type==seller)
+        seller = query.one()
+
+        contract = Contract(seller_id=seller.id,
                             purchaser_id=request.form['purchaser_id'],
                             resource=request.form['resource'],
                             amount=request.form['amount'],
@@ -85,7 +96,7 @@ def contracts(session_id):
             return {}
 
 
-@app.route('<int:session_id>/round/next', methods=['GET'])
+@app.route('/<int:session_id>/round/next', methods=['GET'])
 def nextRound(session_id):
     if str(session_id) in user_session and user_session.get(str(session_id)).get("company") == "GM":
         game_session = session.query(GameSession).filter_by(id=session_id).one()
@@ -117,6 +128,8 @@ def nextRound(session_id):
                     session.commit()
                 else:
                     resource_seller.amount = resource_seller.amount - contract.amount
+                    contract.fulfilled = True
+                    session.add(contract)
                     session.add(resource_seller)
                     resource_buyer.amount = resource_buyer.amount + contract.amount
                     session.add(resource_buyer)
