@@ -122,20 +122,54 @@ def nextRound(session_id):
                     resource_buyer = query.filter(Storage.company_id == contract.purchaser_id).one()
                 except NoResultFound:
                     resource_buyer = Storage(resource=contract.resource, amount=0, company_id=contract.purchaser_id)
+                    # Can't fulfill the contract, calculate punishment costs
                 if resource_seller is None or resource_seller.amount < contract.amount:
-                    company.costs = company.costs + (10 * contract.amount)
+                    company.costs += (10 * contract.amount)
                     session.add(company)
                     session.commit()
                 else:
-                    resource_seller.amount = resource_seller.amount - contract.amount
+                    resource_seller.amount -= contract.amount
                     contract.fulfilled = True
                     session.add(contract)
                     session.add(resource_seller)
-                    resource_buyer.amount = resource_buyer.amount + contract.amount
+                    resource_buyer.amount += contract.amount
                     session.add(resource_buyer)
                     session.commit()
 
+                # Brew beer
+                if company.type.name == 'Brewery':
+                    hop = session.query(Storage).filter(Storage.company_id == company.id).filter(
+                        Storage.resource.type == 'HOP').one()
+                    beer = session.query(Storage).filter(Storage.company_id == company.id).filter(
+                        Storage.resource.type == 'BEER').one()
 
+                    beer.amount += hop.amount
+                    hop.amount = 0
+                    session.add(beer)
+                    session.add(hop)
+                    session.commit()
+
+                # Calculate storage costs
+                costs = 0
+                for storage in company.storages:
+                    costs += storage.amount*5
+                company.costs += costs
+                session.add(company)
+                session.commit()
+
+@app.route('<int:session_id>/ready', methods=['GET', 'POST'])
+def ready(session_id):
+    if request.method == 'POST':
+        c_id = request.json['company_id']
+        isReady = request.json['ready']
+        session_company = session.query(SessionCompany).filter(SessionCompany.company_id == c_id).one()
+        session_company.ready = isReady
+        session.add(session_company)
+        session.commit()
+        return jsonify(session_company=session_company.serialize)
+    else:
+        session_companyies = session.query(SessionCompany).filter(SessionCompany.session_id  == session_id).all()
+        return jsonify(session_companies=[s_c.serialize for s_c in session_companyies])
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'

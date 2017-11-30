@@ -5,6 +5,23 @@ from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
+class Storage(Base):
+    __tablename__ = 'storage'
+
+    id = Column(Integer, primary_key=True)
+    resource = Column('resource', Enum("Water", "Hop", "Beer", name="resource_type"))
+    amount = Column(Integer)
+    company_id = Column(Integer, ForeignKey('company.id'))
+
+    @property
+    def serialize(self):
+        """Return object data in easily serializeable format"""
+        return {
+            'id': self.id,
+            'resource': self.resource,
+            'amount': self.amount,
+        }
+
 class Company(Base):
     __tablename__ = 'company'
 
@@ -12,6 +29,8 @@ class Company(Base):
     name = Column(Text, nullable=False)
     type = Column('type', Enum("Brewery", "Store", "Wholesaler", "GM", name='company_type'))
     costs = Column(Integer)
+    storages = relationship(Storage)
+
 
 
     @property
@@ -24,23 +43,7 @@ class Company(Base):
             'type': self.type
         }
 
-class Storage(Base):
-    __tablename__ = 'storage'
 
-    id = Column(Integer, primary_key=True)
-    resource = Column('resource', Enum("Water", "Hop", "Beer", name="resource_type"))
-    amount = Column(Integer)
-    company_id = Column(Integer, ForeignKey('company.id'))
-    company = relationship(Company)
-
-    @property
-    def serialize(self):
-        """Return object data in easily serializeable format"""
-        return {
-            'id': self.id,
-            'resource': self.resource,
-            'amount': self.amount,
-        }
 
 
 class GameSession(Base):
@@ -67,6 +70,7 @@ class SessionCompany(Base):
     session = relationship(GameSession)
     company_id = Column(Integer, ForeignKey('company.id'))
     company = relationship(Company)
+    ready = Column(Boolean)
 
     @property
     def serialize(self):
@@ -74,7 +78,8 @@ class SessionCompany(Base):
         return {
             'id': self.id,
             'session': self.session.serialize,
-            'company': self.company.serialize
+            'company': self.company.serialize,
+            'isReady': self.ready
         }
 
 
