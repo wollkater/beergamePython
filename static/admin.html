@@ -7,7 +7,7 @@
 <div class="row">
     <div class="col col-md-12" style="text-align: center">
         <input type="text" class="form-control" ng-model="game.name" placeholder="Spielname">
-        <button class="btn btn-success btn-lg" ng-click="createGame()" style="margin: 15px 0 0 0;" ng-disabled="game.name.length <= 0">Spiel erstellen!</button>
+        <button class="btn btn-success btn-lg" ng-click="createGame(game.name)" style="margin: 15px 0 0 0;" ng-disabled="game.name.length <= 0">Spiel erstellen!</button>
         <div class="alert" ng-if="alert">{{alert.msg}}</div>
     </div>
 </div>

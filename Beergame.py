@@ -1,11 +1,13 @@
 from flask import Flask, request, jsonify
 from flask import session as user_session
+from flask_cors import CORS
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
 
 from db_init import Contract, Base, engine, GameSession, Company, Storage, SessionCompany
 
 app = Flask(__name__)
+CORS(app)
 
 # Connect to Database and create database session
 Base.metadata.bind = engine
@@ -17,7 +19,7 @@ companies = ("Store", "Wholesaler", "Brewery", "GM")
 @app.route('/sessions', methods=['GET', 'POST'])
 def sessions():
     if request.method == 'POST':
-        game_session = GameSession(name=request.form['name'])
+        game_session = GameSession(name=request.json['name'])
         company = Company(type="GM", costs=0, name="GameMaster")
         session.add(company)
         session.commit()
@@ -35,20 +37,21 @@ def sessions():
     else:
         games = session.query(GameSession).all()
         return jsonify(games=[g.serialize for g in games])
-
+@app.route('/sessions/<int:session_id>')
+def sessionDetail(session_id):
+    return jsonify(session.query(GameSession).filter(GameSession.id == session_id).one().serialize)
 
 @app.route('/<int:session_id>/join', methods=['POST'])
 def join(session_id):
-    form = request.form
+    form = request.json
 
     if str(session_id) not in user_session:
         game_session = session.query(GameSession).filter_by(id=session_id).one()
         company = Company(type=form['type'])
         user_session[game_session.id] = {"company": company.type.name, "company_id": company.id}
-        return jsonify(company=company.serialize)
     else:
         company = session.query(SessionCompany).filter_by(session_id=session_id).one().company
-        return jsonify(company=company.serialize)
+    return jsonify(company=company.serialize)
 
 
 @app.route('/<int:session_id>/availableCompanies')
@@ -64,19 +67,31 @@ def availableCompanies(session_id):
 @app.route('/<int:session_id>/contracts', methods=['GET', 'POST'])
 def contracts(session_id):
     if request.method == 'POST':
-        buyer = session.query(Company).filter_by(id=request.form['buyer_id']).one()
-        try:
-            seller = companies[companies.index(buyer.type)+1]
-        except IndexError:
-            seller = companies[0]
+        resource = ''
+        seller = ''
+        c_type = user_session['company'];
+
+        if c_type == 'Brewery':
+            resource = 'HOP'
+            seller = 'GM'
+        elif c_type == 'Wholesaler':
+            resource = 'Beer'
+            seller = 'Brewery'
+        elif c_type == 'Store':
+            resource = 'Beer'
+            seller = 'Wholesaler'
+        elif c_type == 'GM':
+            resource = 'Beer'
+            seller = 'Store'
+
         query = session.query(SessionCompany)
         query = query.filter(SessionCompany.session_id==session_id)
         query = query.join(SessionCompany.company).filter(Company.type==seller)
         seller = query.one()
 
         contract = Contract(seller_id=seller.id,
-                            purchaser_id=request.form['purchaser_id'],
-                            resource=request.form['resource'],
+                            purchaser_id=user_session['company_id'],
+                            resource=resource,
                             amount=request.form['amount'],
                             fulfilled=False)
         session.add(contract)

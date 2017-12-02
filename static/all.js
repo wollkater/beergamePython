@@ -10,7 +10,7 @@ angular.module('BeerGame', ['ngRoute'])
                 templateUrl: 'selectGame.html',
                 controller: 'SelectGameCtrl'
             })
-            .when('/game/:companyType', {
+            .when('/game/:sessionId', {
                 templateUrl: 'game.html',
                 controller: 'GameCtrl'
             })
@@ -18,7 +18,7 @@ angular.module('BeerGame', ['ngRoute'])
                 templateUrl: 'admin.html',
                 controller: 'AdminCtrl'
              })
-             .when('/adminPanel', {
+             .when('/adminPanel/:sessionId', {
                 templateUrl: 'adminPanel.html',
                 controller: 'AdminPanelCtrl'
              })
@@ -76,6 +76,7 @@ angular.module('BeerGame', ['ngRoute'])
 
     function selectCompany(company) {
         window.localStorage.setItem('company', company.type);
+        backend.registerCompany
         $location.path('/game/' + company.type);
     }
 })
@@ -117,13 +118,13 @@ angular.module('BeerGame', ['ngRoute'])
 
     function getCompanyName(companyType) {
         switch(companyType) {
-            case 'brewery':
+            case 'Brewery':
                 return 'Brauerei';
                 break;
-            case 'retailer':
+            case 'Store':
                 return 'Einzelhändler';
                 break;
-            case 'wholesaler':
+            case 'Wholesaler':
                 return 'Großhändler';
                 break;
             default:
@@ -132,12 +133,11 @@ angular.module('BeerGame', ['ngRoute'])
         }
     }
 })
-.controller('SelectGameCtrl', function($scope, $log, $location) {
-    $scope.games = [
-        {name: 'Spiel 1', id: 123},
-        {name: 'Spiel 2', id: 321},
-        {name: 'Spiel 3', id: 231}
-    ];
+.controller('SelectGameCtrl', function($scope, $log, $location, backend) {
+    backend.getGames()
+        .then(function(resp) {
+            $scope.games = resp.data.games;
+        })
 
     $scope.selectGame = selectGame;
 
@@ -198,45 +198,49 @@ angular.module('BeerGame', ['ngRoute'])
     }
 })
 .factory('backend', function($log, $http) {
-    var baseUrl = "";
+    var baseUrl = "http://localhost:5000/";
     var factory = {
-        getGames: getGames
+        getGames: getGames,
+        createGame: createGame,
+        registerCompany: registerCompany,
+        getUnregisteredCompanies: getUnregisteredCompanies,
+        createContract: createContract,
+        getContracts: getContracts,
+        getSessions: getSession,
+        nextRound: nextRound
+
     };
 
     function createGame(name) {
-        return $http.post(baseUrl + '/create', {name: name});
+        return $http.post(baseUrl + 'sessions', {name: name});
     }
 
     function getGames() {
-        return $http.get(baseUrl + '/games');
+        return $http.get(baseUrl + 'sessions');
     }
     
-    function registerCompany(companyType) {
-        return $http.post();
+    function registerCompany(sessionId, companyType) {
+        return $http.post(baseUrl + sessionId + '/join', {"type":companyType});
     }
 
-    function getUnregisteredCompanies() {
-        return $http.get(baseUrl + "/companies");
+    function getUnregisteredCompanies(sessionId) {
+        return $http.get(baseUrl + sessionId + "/availableCompanies");
     }
 
-    function placeOrder(number) {
-        return $http.post(baseUrl + "/order", {count: number});
+    function createContract(sessionId, number) {
+        return $http.post(baseUrl + sessionId + "/contracts", {count: number});
     }
 
-    function updateCompanyData() {
-        return $http.get(baseUrl + "/company")
+    function getContracts() {
+        return $http.get(baseUrl + "/contracts")
     }
 
-    function getOrder() {
-        return $http.get(baseUrl + "/order");
+    function getSession(id) {
+        return $http.get(baseUrl + "/sessions/" + id);
     }
 
-    function getRound() {
-        return $http.get(baseUrl + "/round");
-    }
-
-    function nextRound(order) {
-        return $http.post(baseUrl + '/nextRound', order)
+    function nextRound() {
+        return $http.get(baseUrl + '/round/next')
     }
     
     return factory;
