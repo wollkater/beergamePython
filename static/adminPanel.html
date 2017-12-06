@@ -9,6 +9,7 @@
         <h2>Runde {{round}}</h2>
     </div>
     <div class="col col-md-6" style="text-align: center">
+        <label class="pull-left">Anzahl zu bestellender Bierkästen:</label>
         <input type="number" step="1" class="form-control" ng-model="order.amount" min="1" onkeypress='return (event.charCode >= 48 && event.charCode <= 57) || event.keyCode == 8'>
         <button class="btn btn-primary btn-lg" style="margin: 15px 0 0 0;" ng-click="nextRound()">Bestellen und nächste Runde starten!</button>
     </div>

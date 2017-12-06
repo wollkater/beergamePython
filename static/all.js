@@ -2,28 +2,30 @@ angular.module('BeerGame', ['ngRoute'])
 .config(['$routeProvider', '$locationProvider',
     function($routeProvider, $locationProvider) {
         $routeProvider
-            .when('/select', {
+            .when('/games/:sessionId/companies', {
                 templateUrl: 'select.html',
                 controller: 'LoginCtrl'
             })
-            .when('/selectGame', {
-                templateUrl: 'selectGame.html',
-                controller: 'SelectGameCtrl'
-            })
-            .when('/game/:sessionId', {
+
+            .when('/games/:sessionId', {
                 templateUrl: 'game.html',
                 controller: 'GameCtrl'
             })
+            .when('/games', {
+                templateUrl: 'selectGame.html',
+                controller: 'SelectGameCtrl'
+            })
+            .when('/admin/:sessionId', {
+                templateUrl: 'adminPanel.html',
+                controller: 'AdminPanelCtrl'
+             })
             .when('/admin', {
                 templateUrl: 'admin.html',
                 controller: 'AdminCtrl'
              })
-             .when('/adminPanel/:sessionId', {
-                templateUrl: 'adminPanel.html',
-                controller: 'AdminPanelCtrl'
-             })
+
             .otherwise({
-                redirectTo: '/selectGame'
+                redirectTo: '/games'
             });
     }
 ])
@@ -35,49 +37,31 @@ angular.module('BeerGame', ['ngRoute'])
    
    
 }])
-.controller('LoginCtrl', function($scope, $log, $location, backend) {
+.controller('LoginCtrl', function($scope, $log, $location,$routeParams, backend) {
 
     $scope.alert = null;
-    $scope.companies = [
-        {
-            name: 'Brauerei',
-            type: 'brewery'
-        }, {
-            name: 'Großhändler',
-            type: 'retailer'
-        }, {
-            name: 'Einzelhändler',
-            type: 'wholesaler'
-        }
-        ];
-    
-    $scope.selectCompany = selectCompany;
 
 
-    function isCompanyAvailable(companyType) {
-        result = false;
-        /*backend.getUnregisteredcompanies()
+    backend.getUnregisteredCompanies($routeParams.sessionId)
         .then(function(companies) {
-            angular.forEach(companies, function(company) {
-                if(companyType == company.type) {
-                    result = true;
-                }
-            });
+            $scope.companies = companies.data.companies
 
-            return result;
         }, function(error) {
             $scope.alert = {
                 msg: 'Unternehmen nicht mehr verfügbar! Bitte wählen Sie ein anderes Unternehmen!'
             };
 
             return result;
-        })*/
-    }
+        })
+    
+    $scope.selectCompany = selectCompany;
 
     function selectCompany(company) {
-        window.localStorage.setItem('company', company.type);
-        backend.registerCompany
-        $location.path('/game/' + company.type);
+        backend.registerCompany($routeParams.sessionId, company)
+            .then(function(resp) {
+                $location.path('/games/' + $routeParams.sessionId);
+                window.localStorage.setItem('company', JSON.stringify(resp.data));
+            })
     }
 })
 .controller('GameCtrl', function($scope, $log, $location, $routeParams, backend) {
@@ -93,17 +77,16 @@ angular.module('BeerGame', ['ngRoute'])
         storage: 0.5,
         delay: 1
     }
-    $scope.company= {
-        name: getCompanyName($routeParams.companyType),
-        companyType: $routeParams.companyType
-    }
+    $scope.company= {}
 
     $scope.addOrderOutput = addOrderOutput;
     $scope.remOrderOutput = remOrderOutput;
 
 
     function init() {
-
+        $scope.company = JSON.parse(window.localStorage.getItem('company')).company;
+        $scope.company.name = getCompanyName($scope.company.type);
+        $scope.money = $scope.company.costs;
     }
 
     init();
@@ -135,26 +118,11 @@ angular.module('BeerGame', ['ngRoute'])
 })
 .controller('SelectGameCtrl', function($scope, $log, $location, backend) {
     backend.getGames()
-        .then(function(resp) {
-            $scope.games = resp.data.games;
-        })
-
-    $scope.selectGame = selectGame;
-
-
-    function selectGame(session) {
-        if(window.localStorage.getItem('session')) {
-            window.localStorage.removeItem('session');
-        }
-
-        window.localStorage.setItem('session', JSON.stringify(session));
-
-        if(window.localStorage.getItem('session')) {
-            $location.path('/select');
-        }
-    }
+    .then(function(resp) {
+        $scope.games = resp.data.games;
+    })
 })
-.controller('AdminCtrl', function($scope, $log, backend) {
+.controller('AdminCtrl', function($scope, $log, $location, backend) {
     $scope.game = {
         name: ""
     }
@@ -166,14 +134,13 @@ angular.module('BeerGame', ['ngRoute'])
     function createGame(name) {
         backend.createGame(name)
         .then(function(success) {
-            window.localStorage.setItem('session', JSON.stringify(success));
-            $location.path('/adminPanel');
+            $location.path('/admin/' + success.data.game_session.session.id);
         }, function(error) {
             $scope.alert = {msg: "Spiel konnte nicht angelegt werden!"};
         });
     }
 })
-.controller('AdminPanelCtrl', function($scope, $log, backend) {
+.controller('AdminPanelCtrl', function($scope, $log, $routeParams, backend) {
     $scope.round = 0;
     $scope.game = {};
     $scope.order = {
@@ -181,20 +148,23 @@ angular.module('BeerGame', ['ngRoute'])
     }
 
     $scope.nextRound = nextRound;
+    $scope.order = order;
 
     function init() {
-        $scope.game = window.localStorage.getItem('session');
-        if($scope.game) {
-            $scope.game = JSON.parse($scope.game);
-        } else {
-            $location.path('/admin');
-        }
+        
     }
 
     init();
 
-    function nextRound(order) {
-        backend.nextRound(order);
+    function order() {
+        backend.createContract($routeParams.sessionId, $scope.order.amount);
+    }
+
+    function nextRound() {
+        order()
+        .then(function(success) {
+            backend.nextRound();
+        })
     }
 })
 .factory('backend', function($log, $http) {
