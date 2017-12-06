@@ -2,28 +2,30 @@ angular.module('BeerGame', ['ngRoute'])
 .config(['$routeProvider', '$locationProvider',
     function($routeProvider, $locationProvider) {
         $routeProvider
-            .when('/select', {
+            .when('/games/:sessionId/companies', {
                 templateUrl: 'select.html',
                 controller: 'LoginCtrl'
             })
-            .when('/selectGame', {
-                templateUrl: 'selectGame.html',
-                controller: 'SelectGameCtrl'
-            })
-            .when('/game/:sessionId', {
+
+            .when('/games/:sessionId', {
                 templateUrl: 'game.html',
                 controller: 'GameCtrl'
             })
+            .when('/games', {
+                templateUrl: 'selectGame.html',
+                controller: 'SelectGameCtrl'
+            })
+            .when('/admin/:sessionId', {
+                templateUrl: 'adminPanel.html',
+                controller: 'AdminPanelCtrl'
+             })
             .when('/admin', {
                 templateUrl: 'admin.html',
                 controller: 'AdminCtrl'
              })
-             .when('/adminPanel/:sessionId', {
-                templateUrl: 'adminPanel.html',
-                controller: 'AdminPanelCtrl'
-             })
+
             .otherwise({
-                redirectTo: '/selectGame'
+                redirectTo: '/games'
             });
     }
 ])
@@ -35,28 +37,29 @@ angular.module('BeerGame', ['ngRoute'])
    
    
 }])
-.controller('LoginCtrl', function($scope, $log, $location, backend) {
+.controller('LoginCtrl', function($scope, $log, $location,$routeParams, backend) {
 
     $scope.alert = null;
-    $scope.companies = [
-        {
-            name: 'Brauerei',
-            type: 'brewery'
-        }, {
-            name: 'Großhändler',
-            type: 'retailer'
-        }, {
-            name: 'Einzelhändler',
-            type: 'wholesaler'
-        }
-        ];
+
+
+    backend.getUnregisteredCompanies($routeParams.sessionId)
+        .then(function(companies) {
+            $scope.companies = companies.data.companies
+
+        }, function(error) {
+            $scope.alert = {
+                msg: 'Unternehmen nicht mehr verfügbar! Bitte wählen Sie ein anderes Unternehmen!'
+            };
+
+            return result;
+        })
     
     $scope.selectCompany = selectCompany;
 
 
-    function isCompanyAvailable(companyType) {
+    function isCompanyAvailable(sessionId, company) {
         result = false;
-        /*backend.getUnregisteredcompanies()
+        backend.getUnregisteredcompanies()
         .then(function(companies) {
             angular.forEach(companies, function(company) {
                 if(companyType == company.type) {
@@ -71,13 +74,15 @@ angular.module('BeerGame', ['ngRoute'])
             };
 
             return result;
-        })*/
+        })
     }
 
     function selectCompany(company) {
-        window.localStorage.setItem('company', company.type);
-        backend.registerCompany
-        $location.path('/game/' + company.type);
+        backend.registerCompany($routeParams.sessionId, company)
+            .then(function(resp) {
+                $location.path('/games/' + $routeParams.sessionId);
+                window.localStorage.setItem('company', JSON.stringify(resp.data));
+            })
     }
 })
 .controller('GameCtrl', function($scope, $log, $location, $routeParams, backend) {

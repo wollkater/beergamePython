@@ -41,14 +41,20 @@ def sessions():
 def sessionDetail(session_id):
     return jsonify(session.query(GameSession).filter(GameSession.id == session_id).one().serialize)
 
-@app.route('/<int:session_id>/join', methods=['POST'])
+@app.route('/<int:session_id>/join', methods=['POST', 'GET'])
 def join(session_id):
     form = request.json
 
     if str(session_id) not in user_session:
         game_session = session.query(GameSession).filter_by(id=session_id).one()
-        company = Company(type=form['type'])
-        user_session[game_session.id] = {"company": company.type.name, "company_id": company.id}
+        company = Company(type=form['type'], costs=0, name='')
+        session.add(company)
+        session.commit()
+        session_company = SessionCompany(session_id=session_id, company_id=company.id)
+        session.add(session_company)
+        session.commit()
+
+        user_session[game_session.id] = {"company": company.type, "company_id": company.id}
     else:
         company = session.query(SessionCompany).filter_by(session_id=session_id).one().company
     return jsonify(company=company.serialize)
