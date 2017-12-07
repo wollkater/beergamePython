@@ -41,7 +41,6 @@ angular.module('BeerGame', ['ngRoute'])
 
     $scope.alert = null;
 
-
     backend.getUnregisteredCompanies($routeParams.sessionId)
         .then(function(companies) {
             $scope.companies = companies.data.companies
