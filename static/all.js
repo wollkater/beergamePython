@@ -200,7 +200,7 @@ angular.module('BeerGame', ['ngRoute'])
     }
 
     function createContract(sessionId, number) {
-        return $http.post(baseUrl + sessionId + "/contracts", {count: number});
+        return $http.post(baseUrl + sessionId + "/contracts", {amount: number});
     }
 
     function getContracts() {

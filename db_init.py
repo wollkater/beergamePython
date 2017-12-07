@@ -101,8 +101,8 @@ class Contract(Base):
         """Return object data in easily serializeable format"""
         return {
             'id': self.id,
-            'purchaser': self.purchaser,
-            'seller': self.seller,
+            'purchaser': self.purchaser_id,
+            'seller': self.seller_id,
             'resource': self.resource,
             'amount': self.amount,
         }

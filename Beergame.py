@@ -56,7 +56,7 @@ def join(session_id):
 
         user_session[str(game_session.id)] = {"company": company.type, "company_id": company.id}
     else:
-        company = session.query(SessionCompany).filter_by(session_id=session_id).one().company
+        company = session.query(SessionCompany).filter_by(session_id=session_id).filter_by(company_id=user_session[str(session_id)]["company_id"]).one().company
     return jsonify(company=company.serialize)
 
 
