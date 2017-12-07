@@ -23,12 +23,12 @@
             <h2>Bestellungsausgang</h2>
         </div>
         <div style="margin: 20px 0 0 0;">
-            <h3>{{orderOutput}}x Bierkästen</h3>
+            <h3>{{orderOutput}}x <span ng-if="company.type != 'Brewery'">Bierkästen</span><span ng-if="company.type == 'Brewery'">Waren</span></h3>
         </div>
         <div style="margin: 10px 0 0 0;">
             <button type="button" class="btn btn-success button-counter" ng-click="addOrderOutput()">+</button>
             <button type="button" class="btn btn-danger button-counter" ng-click="remOrderOutput()">-</button>
-            <button type="button" class="btn btn-primary" ng-click="placeOrder()">Bestellen</button>
+            <button type="button" class="btn btn-primary" ng-click="order()">Bestellen</button>
         </div>
     </div>
 </div>
@@ -46,7 +46,7 @@
             <h2>Wareneingang</h2>
         </div>
         <div style="margin: 20px 0 0 0;">
-            <h3>{{input}}x Bierkästen</h3>
+            <h3>{{input}}x <span ng-if="company.type != 'Brewery'">Bierkästen</span><span ng-if="company.type == 'Brewery'">Waren</span></h3>
         </div>
     </div>
 </div>
