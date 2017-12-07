@@ -19,7 +19,7 @@ companies = ("Store", "Wholesaler", "Brewery", "GM")
 @app.route('/sessions', methods=['GET', 'POST'])
 def sessions():
     if request.method == 'POST':
-        game_session = GameSession(name=request.json['name'])
+        game_session = GameSession(name=request.json['name'], current_round=0)
         company = Company(type="GM", costs=0, name="GameMaster")
         session.add(company)
         session.commit()
@@ -186,6 +186,8 @@ def nextRound(session_id):
                 company.costs += costs
                 session.add(company)
                 session.commit()
+
+        return jsonify(game_session.serialize)
 
 @app.route('/<int:session_id>/ready', methods=['GET', 'POST'])
 def ready(session_id):
