@@ -178,13 +178,13 @@ angular.module('BeerGame', ['ngRoute'])
     init();
 
     function order() {
-        backend.createContract($routeParams.sessionId, $scope.order.amount);
+        return backend.createContract($routeParams.sessionId, $scope.order.amount);
     }
 
     function nextRound() {
         order()
         .then(function(success) {
-            backend.nextRound();
+            backend.nextRound($routeParams.sessionId);
         })
     }
 })
@@ -230,8 +230,8 @@ angular.module('BeerGame', ['ngRoute'])
         return $http.get(baseUrl + "/sessions/" + id);
     }
 
-    function nextRound() {
-        return $http.get(baseUrl + '/round/next')
+    function nextRound(sessionId) {
+        return $http.get(baseUrl + sessionId + '/round/next')
     }
     
     return factory;
