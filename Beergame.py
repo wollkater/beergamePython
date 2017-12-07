@@ -27,6 +27,10 @@ def sessions():
         session.add(game_session)
         session.commit()
 
+        storage = Storage(company_id=company.id, resource='Hop', amount=50000000000)
+        session.add(storage)
+        session.commit()
+
         company_session = SessionCompany(session_id=game_session.id, company_id=company.id)
         session.add(company_session)
         session.commit()
