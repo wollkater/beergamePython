@@ -7,7 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from db_init import Contract, Base, engine, GameSession, Company, Storage, SessionCompany
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, resources=r'*')
+CORS(app, supports_credentials=True)
 
 # Connect to Database and create database session
 Base.metadata.bind = engine
@@ -33,7 +33,6 @@ def sessions():
 
         user_session[str(game_session.id)] = {"company": "GM", "company_id": company.id}
         user_session.permanent = True
-
         return jsonify(game_session=company_session.serialize)
     else:
         games = session.query(GameSession).all()
@@ -55,7 +54,7 @@ def join(session_id):
         session.add(session_company)
         session.commit()
 
-        user_session[game_session.id] = {"company": company.type, "company_id": company.id}
+        user_session[str(game_session.id)] = {"company": company.type, "company_id": company.id}
     else:
         company = session.query(SessionCompany).filter_by(session_id=session_id).one().company
     return jsonify(company=company.serialize)
