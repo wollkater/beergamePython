@@ -82,7 +82,7 @@ def contracts(session_id):
         c_type = user_session[str(session_id)]['company'];
 
         if c_type == 'Brewery':
-            resource = 'HOP'
+            resource = 'Hop'
             seller = 'GM'
         elif c_type == 'Wholesaler':
             resource = 'Beer'
@@ -111,8 +111,8 @@ def contracts(session_id):
     else:
         if str(session_id) in user_session:
             c_id = user_session.get(str(session_id)).get('company_id')
-            bought = session.query(Contract).filter(Contract.purchaser == c_id)
-            sold = session.query(Contract).filter(Contract.seller == c_id)
+            bought = session.query(Contract).filter(Contract.purchaser_id == c_id)
+            sold = session.query(Contract).filter(Contract.seller_id == c_id)
             return jsonify(bought=[b.serialize for b in bought],
                            sold=[s.serialize for s in sold])
 

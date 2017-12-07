@@ -84,14 +84,33 @@ angular.module('BeerGame', ['ngRoute'])
     $scope.addOrderOutput = addOrderOutput;
     $scope.remOrderOutput = remOrderOutput;
 
+    $scope.order = order;
+
 
     function init() {
         $scope.company = JSON.parse(window.localStorage.getItem('company')).company;
         $scope.company.name = getCompanyName($scope.company.type);
         $scope.money = $scope.company.costs;
+        getContracts();
     }
 
     init();
+
+    function getContracts() {
+        backend.getContracts($routeParams.sessionId)
+        .then(function(order) {
+            $log.debug("Order: ", order);
+            angular.forEach(order.data.sold, function(singleOrder) {
+                $scope.orderInput += singleOrder.amount;
+            })
+        }, function(error) {
+            $log.error("Could not load contracts: ", error);
+        })
+    }
+
+    function order() {
+        backend.createContract($routeParams.sessionId, $scope.orderOutput);
+    }
 
     function addOrderOutput() {
         $scope.orderOutput ++;
@@ -203,8 +222,8 @@ angular.module('BeerGame', ['ngRoute'])
         return $http.post(baseUrl + sessionId + "/contracts", {amount: number});
     }
 
-    function getContracts() {
-        return $http.get(baseUrl + "/contracts")
+    function getContracts(sessionId) {
+        return $http.get(baseUrl + sessionId + "/contracts")
     }
 
     function getSession(id) {

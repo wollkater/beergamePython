@@ -58,7 +58,8 @@ class GameSession(Base):
         """Return object data in easily serializeable format"""
         return {
             'id': self.id,
-            'name': self.name
+            'name': self.name,
+            'round': self.current_round
         }
 
 
@@ -105,6 +106,8 @@ class Contract(Base):
             'seller': self.seller_id,
             'resource': self.resource,
             'amount': self.amount,
+            'round_created': self.round_created,
+            'fulfilled': self.fulfilled
         }
 
 
