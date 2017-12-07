@@ -45,10 +45,10 @@ def sessions():
 def sessionDetail(session_id):
     return jsonify(session.query(GameSession).filter(GameSession.id == session_id).one().serialize)
 
-@app.route('<int:session_id>/company')
+@app.route('/<int:session_id>/company')
 def company(session_id):
     c_id = user_session[str(session_id)]['company_id']
-    return jsonify(session.query(Company).filter(id=c_id).one().serialize)
+    return jsonify(session.query(Company).filter_by(id=c_id).one().serialize)
 
 @app.route('/<int:session_id>/join', methods=['POST', 'GET'])
 def join(session_id):
@@ -105,7 +105,7 @@ def contracts(session_id):
         seller = query.one()
 
         contract = Contract(seller_id=seller.id,
-                            purchaser_id=user_session[str(session_id)]['company'],
+                            purchaser_id=user_session[str(session_id)]['company_id'],
                             resource=resource,
                             amount=request.json['amount'],
                             fulfilled=False)

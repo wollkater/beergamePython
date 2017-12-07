@@ -41,7 +41,7 @@ class Company(Base):
             'id': self.id,
             'costs': self.costs,
             'type': self.type,
-            'storages': [s.seralize for s in self.storages]
+            'storages': [s.serialize for s in self.storages]
         }
 
 
