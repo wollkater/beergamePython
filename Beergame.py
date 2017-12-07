@@ -45,6 +45,11 @@ def sessions():
 def sessionDetail(session_id):
     return jsonify(session.query(GameSession).filter(GameSession.id == session_id).one().serialize)
 
+@app.route('<int:session_id>/company')
+def company(session_id):
+    c_id = user_session[str(session_id)]['company_id']
+    return jsonify(session.query(Company).filter(id=c_id).one().serialize)
+
 @app.route('/<int:session_id>/join', methods=['POST', 'GET'])
 def join(session_id):
     form = request.json

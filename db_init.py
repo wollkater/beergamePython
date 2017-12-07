@@ -40,7 +40,8 @@ class Company(Base):
             'name': self.name,
             'id': self.id,
             'costs': self.costs,
-            'type': self.type
+            'type': self.type,
+            'storages': [s.seralize for s in self.storages]
         }
 
 
@@ -111,6 +112,6 @@ class Contract(Base):
         }
 
 
-engine = create_engine('sqlite:///beergame.db')
+engine = create_engine('sqlite:///beergame2.db')
 
 Base.metadata.create_all(engine)
