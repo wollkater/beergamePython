@@ -108,6 +108,6 @@ class Contract(Base):
         }
 
 
-engine = create_engine('sqlite:///bagelShop.db')
+engine = create_engine('sqlite:///beergame.db')
 
 Base.metadata.create_all(engine)

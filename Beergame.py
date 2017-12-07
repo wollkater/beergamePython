@@ -7,7 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from db_init import Contract, Base, engine, GameSession, Company, Storage, SessionCompany
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True, resources=r'*')
 
 # Connect to Database and create database session
 Base.metadata.bind = engine
@@ -32,6 +32,7 @@ def sessions():
         session.commit()
 
         user_session[str(game_session.id)] = {"company": "GM", "company_id": company.id}
+        user_session.permanent = True
 
         return jsonify(game_session=company_session.serialize)
     else:
@@ -75,7 +76,7 @@ def contracts(session_id):
     if request.method == 'POST':
         resource = ''
         seller = ''
-        c_type = user_session[session_id].company;
+        c_type = user_session[str(session_id)]['company'];
 
         if c_type == 'Brewery':
             resource = 'HOP'
@@ -96,7 +97,7 @@ def contracts(session_id):
         seller = query.one()
 
         contract = Contract(seller_id=seller.id,
-                            purchaser_id=user_session[session_id].company,
+                            purchaser_id=user_session[str(session_id)]['company'],
                             resource=resource,
                             amount=request.json['amount'],
                             fulfilled=False)

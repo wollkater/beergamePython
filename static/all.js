@@ -1,4 +1,7 @@
 angular.module('BeerGame', ['ngRoute'])
+.config(function ($httpProvider) {
+    $httpProvider.defaults.withCredentials = true;
+})
 .config(['$routeProvider', '$locationProvider',
     function($routeProvider, $locationProvider) {
         $routeProvider
