@@ -85,6 +85,7 @@ def contracts(session_id):
         resource = ''
         seller = ''
         c_type = user_session[str(session_id)]['company'];
+        gameSession = session.query(GameSession).filter_by(id=session_id).one()
 
         if c_type == 'Brewery':
             resource = 'Hop'
@@ -108,7 +109,9 @@ def contracts(session_id):
                             purchaser_id=user_session[str(session_id)]['company_id'],
                             resource=resource,
                             amount=request.json['amount'],
-                            fulfilled=False)
+                            fulfilled=False,
+                            round_created=gameSession.current_round
+                            )
         session.add(contract)
         session.commit()
 
@@ -138,12 +141,12 @@ def nextRound(session_id):
 
         for company in companies:
             query = session.query(Contract).filter(Contract.seller_id == company.id)
-            query = query.filter(Contract.fulfilled is False)
-            query = query.filter(Contract.round_created >= game_session.current_round + 2)
+            query = query.filter(Contract.fulfilled == False)
+            query = query.filter(Contract.round_created <= game_session.current_round - 2)
             contracts = query.all()
 
             for contract in contracts:
-                query = session.query(Storage).filter(Storage.type == contract.resource)
+                query = session.query(Storage).filter(Storage.resource == contract.resource)
                 try:
                     resource_seller = query.filter(Storage.company_id == contract.seller_id).one()
                 except NoResultFound:
@@ -167,11 +170,17 @@ def nextRound(session_id):
                     session.commit()
 
                 # Brew beer
-                if company.type.name == 'Brewery':
-                    hop = session.query(Storage).filter(Storage.company_id == company.id).filter(
-                        Storage.resource.type == 'HOP').one()
-                    beer = session.query(Storage).filter(Storage.company_id == company.id).filter(
-                        Storage.resource.type == 'BEER').one()
+                if company.type == 'Brewery':
+                    try:
+                        hop = session.query(Storage).filter(Storage.company_id == company.id).filter(
+                            Storage.resource == 'Hop').one()
+                    except NoResultFound:
+                        hop = Storage(company_id = company.id, resource = 'Hop', amount=0)
+                    try:
+                        beer = session.query(Storage).filter(Storage.company_id == company.id).filter(
+                            Storage.resource == 'Beer').one()
+                    except NoResultFound:
+                        beer = Storage(company_id = company.id, resource = 'Beer', amount=0)
 
                     beer.amount += hop.amount
                     hop.amount = 0
