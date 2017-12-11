@@ -62,7 +62,6 @@ angular.module('BeerGame', ['ngRoute'])
         backend.registerCompany($routeParams.sessionId, company)
             .then(function(resp) {
                 $location.path('/games/' + $routeParams.sessionId);
-                window.localStorage.setItem('company', JSON.stringify(resp.data));
             })
     }
 })
@@ -91,9 +90,12 @@ angular.module('BeerGame', ['ngRoute'])
         .then(function(company) {
             $scope.company = company.data;
             $scope.company.name = getCompanyName($scope.company.type);
-            $scope.company.costs;
         });
         getContracts();
+        backend.getSessions($routeParams.sessionId)
+            .then(function(resp) {
+                $scope.roundNumber = resp.data.round;
+            })
     }
 
     init();
@@ -174,7 +176,10 @@ angular.module('BeerGame', ['ngRoute'])
     $scope.order = order;
 
     function init() {
-        
+        backend.getSessions($routeParams.sessionId)
+            .then(function(resp) {
+                $scope.round = resp.data.round;
+            })
     }
 
     init();
@@ -230,7 +235,7 @@ angular.module('BeerGame', ['ngRoute'])
     }
 
     function getSession(id) {
-        return $http.get(baseUrl + "/sessions/" + id);
+        return $http.get(baseUrl + "sessions/" + id);
     }
 
     function nextRound(sessionId) {
@@ -240,6 +245,6 @@ angular.module('BeerGame', ['ngRoute'])
     function getCompany(sessionId) {
         return $http.get(baseUrl + sessionId + "/company");
     }
-    
+
     return factory;
 })
