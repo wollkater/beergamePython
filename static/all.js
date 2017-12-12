@@ -195,6 +195,17 @@ angular.module('BeerGame', ['ngRoute'])
         })
     }
 })
+.filter('resource', function() {
+    return function (input) {
+        input = input || '';
+        switch (input) {
+            case 'Beer':
+                return 'Bierkasten';
+            case 'Hop':
+                return 'Hopfen';
+        }
+    }
+})
 .factory('backend', function($log, $http) {
     var baseUrl = "http://localhost:5000/";
     var factory = {

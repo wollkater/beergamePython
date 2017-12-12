@@ -56,7 +56,7 @@
             <h2>Lager</h2>
         </div>
         <div style="margin: 20px 0 0 0;">
-            <h3>{{storage}}x Bierkästen</h3>
+            <h3 ng-repeat="storage in company.storages">{{ storage.amount }} x {{ storage.resource | resource }}</h3>
         </div>
     </div>
 </div>
