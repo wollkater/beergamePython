@@ -14,39 +14,22 @@
         <div style="text-align: center">
             <h2>Bestellungseingang</h2>
         </div>
-        <div style="margin: 20px 0 0 0;">
-            <h3>{{orderInput}}x Bierkästen</h3>
+       <div style="margin: 20px 0 0 0;">
+            <h3 ng-repeat="output in contracts.sold | filter:{fulfilled:false}">{{output.amount}} x {{ output.resource | resource }}</h3>
         </div>
     </div>
     <div class="col col-md-6 border">
         <div style="text-align: center">
             <h2>Bestellungsausgang</h2>
         </div>
-        <div style="margin: 20px 0 0 0;">
-            <h3>{{orderOutput}}x <span ng-if="company.type != 'Brewery'">Bierkästen</span><span ng-if="company.type == 'Brewery'">Waren</span></h3>
+         <div style="margin: 20px 0 0 0;">
+            <h3 ng-repeat="input in contracts.bought | filter:{fulfilled:false}">{{input.amount}} x {{ input.resource | resource }}</h3>
         </div>
-        <div style="margin: 10px 0 0 0;">
+        <div style="margin: 20px 0 0 0;">
+            <span style="font-size:24px">{{orderOutput}}x <span ng-if="company.type != 'Brewery'">Bierkästen</span><span ng-if="company.type == 'Brewery'">Waren</span></span>
             <button type="button" class="btn btn-success button-counter" ng-click="addOrderOutput()">+</button>
             <button type="button" class="btn btn-danger button-counter" ng-click="remOrderOutput()">-</button>
             <button type="button" class="btn btn-primary" ng-click="order()">Bestellen</button>
-        </div>
-    </div>
-</div>
-<div class="row">
-    <div class="col col-md-6 border">
-        <div style="text-align: center">
-            <h2>Warenausgang</h2>
-        </div>
-        <div style="margin: 20px 0 0 0;">
-            <h3>{{output}}x Bierkästen</h3>
-        </div>
-    </div>
-    <div class="col col-md-6 border">
-        <div style="text-align: center">
-            <h2>Wareneingang</h2>
-        </div>
-        <div style="margin: 20px 0 0 0;">
-            <h3>{{input}}x <span ng-if="company.type != 'Brewery'">Bierkästen</span><span ng-if="company.type == 'Brewery'">Waren</span></h3>
         </div>
     </div>
 </div>

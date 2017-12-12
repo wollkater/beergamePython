@@ -65,7 +65,7 @@ angular.module('BeerGame', ['ngRoute'])
             })
     }
 })
-.controller('GameCtrl', function($scope, $log, $location, $routeParams, backend) {
+.controller('GameCtrl', function($scope, $log, $location, $routeParams, backend, $interval) {
 
     $scope.roundNumber = 0;
     $scope.storage = 12;
@@ -78,6 +78,7 @@ angular.module('BeerGame', ['ngRoute'])
         delay: 1
     }
     $scope.company= {}
+
 
     $scope.addOrderOutput = addOrderOutput;
     $scope.remOrderOutput = remOrderOutput;
@@ -97,16 +98,13 @@ angular.module('BeerGame', ['ngRoute'])
                 $scope.roundNumber = resp.data.round;
             })
     }
-
     init();
+    $interval(function(){init()}, 1000);
 
     function getContracts() {
         backend.getContracts($routeParams.sessionId)
         .then(function(order) {
-            $log.debug("Order: ", order);
-            angular.forEach(order.data.sold, function(singleOrder) {
-                $scope.orderInput += singleOrder.amount;
-            })
+            $scope.contracts = order.data;
         }, function(error) {
             $log.error("Could not load contracts: ", error);
         })
@@ -165,12 +163,13 @@ angular.module('BeerGame', ['ngRoute'])
         });
     }
 })
-.controller('AdminPanelCtrl', function($scope, $log, $routeParams, backend) {
+.controller('AdminPanelCtrl', function($scope, $log, $routeParams, backend, $interval) {
     $scope.round = 0;
     $scope.game = {};
     $scope.order = {
         amount: 0
     }
+
 
     $scope.nextRound = nextRound;
     $scope.order = order;
@@ -183,6 +182,7 @@ angular.module('BeerGame', ['ngRoute'])
     }
 
     init();
+    $interval(function(){init()}, 1000);
 
     function order() {
         return backend.createContract($routeParams.sessionId, $scope.order.amount);

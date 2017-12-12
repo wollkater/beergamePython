@@ -142,7 +142,8 @@ def nextRound(session_id):
         for company in companies:
             query = session.query(Contract).filter(Contract.seller_id == company.id)
             query = query.filter(Contract.fulfilled == False)
-            query = query.filter(Contract.round_created <= game_session.current_round - 2)
+            # One round in Input and one round in Storage
+            query = query.filter(Contract.round_created <= game_session.current_round - 1)
             contracts = query.all()
 
             for contract in contracts:
