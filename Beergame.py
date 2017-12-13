@@ -84,7 +84,7 @@ def contracts(session_id):
     if request.method == 'POST':
         resource = ''
         seller = ''
-        c_type = user_session[str(session_id)]['company'];
+        c_type = user_session[str(session_id)]['company']
         gameSession = session.query(GameSession).filter_by(id=session_id).one()
 
         if c_type == 'Brewery':
@@ -146,6 +146,14 @@ def nextRound(session_id):
             query = query.filter(Contract.round_created <= game_session.current_round - 1)
             contracts = query.all()
 
+            # Calculate storage costs before we get new items in that round
+            costs = 0
+            for storage in company.storages:
+                costs += storage.amount * 5
+            company.costs += costs
+            session.add(company)
+            session.commit()
+
             for contract in contracts:
                 query = session.query(Storage).filter(Storage.resource == contract.resource)
                 try:
@@ -188,14 +196,6 @@ def nextRound(session_id):
                     session.add(beer)
                     session.add(hop)
                     session.commit()
-
-                # Calculate storage costs
-                costs = 0
-                for storage in company.storages:
-                    costs += storage.amount*5
-                company.costs += costs
-                session.add(company)
-                session.commit()
 
         return jsonify(game_session.serialize)
 
