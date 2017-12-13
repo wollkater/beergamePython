@@ -41,14 +41,18 @@ def sessions():
     else:
         games = session.query(GameSession).all()
         return jsonify(games=[g.serialize for g in games])
+
+
 @app.route('/sessions/<int:session_id>')
 def sessionDetail(session_id):
     return jsonify(session.query(GameSession).filter(GameSession.id == session_id).one().serialize)
+
 
 @app.route('/<int:session_id>/company')
 def company(session_id):
     c_id = user_session[str(session_id)]['company_id']
     return jsonify(session.query(Company).filter_by(id=c_id).one().serialize)
+
 
 @app.route('/<int:session_id>/join', methods=['POST', 'GET'])
 def join(session_id):
@@ -67,13 +71,13 @@ def join(session_id):
 
         user_session[str(game_session.id)] = {"company": company.type, "company_id": company.id}
     else:
-        company = session.query(SessionCompany).filter_by(session_id=session_id).filter_by(company_id=user_session[str(session_id)]["company_id"]).one().company
+        company = session.query(SessionCompany).filter_by(session_id=session_id).filter_by(
+            company_id=user_session[str(session_id)]["company_id"]).one().company
     return jsonify(company=company.serialize)
 
 
 @app.route('/<int:session_id>/availableCompanies')
 def availableCompanies(session_id):
-
     companies_in_use = session.query(SessionCompany).filter_by(session_id=session_id).all()
     companies_in_use = [c.company.type for c in companies_in_use]
     usable = [company for company in companies if company not in companies_in_use]
@@ -103,8 +107,8 @@ def contracts(session_id):
             seller = 'Store'
 
         query = session.query(SessionCompany)
-        query = query.filter(SessionCompany.session_id==session_id)
-        query = query.join(SessionCompany.company).filter(Company.type==seller)
+        query = query.filter(SessionCompany.session_id == session_id)
+        query = query.join(SessionCompany.company).filter(Company.type == seller)
         seller = query.one()
 
         contract = Contract(seller_id=seller.id,
@@ -191,12 +195,12 @@ def nextRound(session_id):
                         hop = session.query(Storage).filter(Storage.company_id == company.id).filter(
                             Storage.resource == 'Hop').one()
                     except NoResultFound:
-                        hop = Storage(company_id = company.id, resource = 'Hop', amount=0)
+                        hop = Storage(company_id=company.id, resource='Hop', amount=0)
                     try:
                         beer = session.query(Storage).filter(Storage.company_id == company.id).filter(
                             Storage.resource == 'Beer').one()
                     except NoResultFound:
-                        beer = Storage(company_id = company.id, resource = 'Beer', amount=0)
+                        beer = Storage(company_id=company.id, resource='Beer', amount=0)
 
                     beer.amount += hop.amount
                     hop.amount = 0
@@ -205,6 +209,7 @@ def nextRound(session_id):
                     session.commit()
 
         return jsonify(game_session.serialize)
+
 
 @app.route('/<int:session_id>/ready', methods=['GET', 'POST'])
 def ready(session_id):
@@ -217,8 +222,9 @@ def ready(session_id):
         session.commit()
         return jsonify(session_company=session_company.serialize)
     else:
-        session_companyies = session.query(SessionCompany).filter(SessionCompany.session_id  == session_id).all()
+        session_companyies = session.query(SessionCompany).filter(SessionCompany.session_id == session_id).all()
         return jsonify(session_companies=[s_c.serialize for s_c in session_companyies])
+
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'

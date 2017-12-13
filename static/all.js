@@ -46,23 +46,7 @@ angular.module('BeerGame', ['ngRoute'])
 
     backend.getUnregisteredCompanies($routeParams.sessionId)
         .then(function(companies) {
-            $scope.companies = [];
-	    angular.forEach(companies.data.companies, function(companyType) {
-	    	switch(companyType) {
-         	   case 'Brewery':
-                	$scope.companies.push('Brauerei');
-                	break;
-            	   case 'Store':
-                	$scope.companies.push('Einzelhändler');
-                	break;
-            	   case 'Wholesaler':
-                	$scope.companies.push('Großhändler');
-                	break;
-            	   default:
-                	$scope.companies.push("Fehlerhaftes Unternehmen!");
-                	break;
-        	}
-	    });
+            $scope.companies = companies.data.companies;
         }, function(error) {
             $scope.alert = {
                 msg: 'Unternehmen nicht mehr verfügbar! Bitte wählen Sie ein anderes Unternehmen!'
@@ -105,7 +89,6 @@ angular.module('BeerGame', ['ngRoute'])
         backend.getCompany($routeParams.sessionId)
         .then(function(company) {
             $scope.company = company.data;
-            $scope.company.name = getCompanyName($scope.company.type);
         });
         getContracts();
         backend.getSessions($routeParams.sessionId)
@@ -135,23 +118,6 @@ angular.module('BeerGame', ['ngRoute'])
 
     function remOrderOutput() {
         $scope.orderOutput --;
-    }
-
-    function getCompanyName(companyType) {
-        switch(companyType) {
-            case 'Brewery':
-                return 'Brauerei';
-                break;
-            case 'Store':
-                return 'Einzelhändler';
-                break;
-            case 'Wholesaler':
-                return 'Großhändler';
-                break;
-            default:
-                return "Fehlerhaftes Unternehmen!";
-                break;
-        }
     }
 })
 .controller('SelectGameCtrl', function($scope, $log, $location, backend) {
@@ -222,6 +188,24 @@ angular.module('BeerGame', ['ngRoute'])
                 return 'Bierkasten';
             case 'Hop':
                 return 'Hopfen';
+        }
+    }
+})
+.filter('company', function() {
+    return function(input) {
+        switch(input) {
+         	case 'Brewery':
+               	return 'Brauerei';
+               	break;
+            case 'Store':
+               	return 'Einzelhändler';
+               	break;
+            case 'Wholesaler':
+               	return 'Großhändler';
+               	break;
+            default:
+              	return "Fehlerhaftes Unternehmen!";
+               	break;
         }
     }
 })
