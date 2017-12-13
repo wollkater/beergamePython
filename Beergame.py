@@ -61,6 +61,8 @@ def join(session_id):
         session.commit()
         session_company = SessionCompany(session_id=session_id, company_id=company.id)
         session.add(session_company)
+        storage = Storage(company_id=company.id, resource='Beer', amount=12)
+        session.add(storage)
         session.commit()
 
         user_session[str(game_session.id)] = {"company": company.type, "company_id": company.id}
