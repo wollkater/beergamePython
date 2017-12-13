@@ -10,7 +10,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="col col-md-6 border">
+    <div class="col col-md-12 border">
         <div style="text-align: center">
             <h2>Bestellungseingang</h2>
         </div>
@@ -18,7 +18,9 @@
             <h3 ng-repeat="output in contracts.sold | filter:{fulfilled:false}">{{output.amount}} x {{ output.resource | resource }}</h3>
         </div>
     </div>
-    <div class="col col-md-6 border">
+</div>
+<div class="row">
+    <div class="col col-md-12 border">
         <div style="text-align: center">
             <h2>Bestellungsausgang</h2>
         </div>

@@ -46,8 +46,23 @@ angular.module('BeerGame', ['ngRoute'])
 
     backend.getUnregisteredCompanies($routeParams.sessionId)
         .then(function(companies) {
-            $scope.companies = companies.data.companies
-
+            $scope.companies = [];
+	    angular.forEach(companies.data.companies, function(companyType) {
+	    	switch(companyType) {
+         	   case 'Brewery':
+                	$scope.companies.push('Brauerei');
+                	break;
+            	   case 'Store':
+                	$scope.companies.push('Einzelhändler');
+                	break;
+            	   case 'Wholesaler':
+                	$scope.companies.push('Großhändler');
+                	break;
+            	   default:
+                	$scope.companies.push("Fehlerhaftes Unternehmen!");
+                	break;
+        	}
+	    });
         }, function(error) {
             $scope.alert = {
                 msg: 'Unternehmen nicht mehr verfügbar! Bitte wählen Sie ein anderes Unternehmen!'
@@ -150,16 +165,20 @@ angular.module('BeerGame', ['ngRoute'])
         name: ""
     }
     $scope.alert = "";
+    $scope.disable = false;
 
     $scope.createGame = createGame;
 
 
     function createGame(name) {
+        $scope.disable = true
         backend.createGame(name)
         .then(function(success) {
             $location.path('/admin/' + success.data.game_session.session.id);
+            $scope.disable = false;
         }, function(error) {
             $scope.alert = {msg: "Spiel konnte nicht angelegt werden!"};
+            $scope.disable = false;
         });
     }
 })
@@ -207,7 +226,7 @@ angular.module('BeerGame', ['ngRoute'])
     }
 })
 .factory('backend', function($log, $http) {
-    var baseUrl = "http://localhost:5000/";
+    var baseUrl = "https://lets-poke.de:5002/";
     var factory = {
         getGames: getGames,
         createGame: createGame,
