@@ -140,11 +140,16 @@ def nextRound(session_id):
         companies = [c.company for c in session.query(SessionCompany).filter_by(session_id=session_id).all()]
 
         for company in companies:
-            query = session.query(Contract).filter(Contract.seller_id == company.id)
-            query = query.filter(Contract.fulfilled == False)
+            query = session.query(Contract).filter(Contract.fulfilled == False)
+
+            query_out = query.filter(Contract.purchaser_id == company.id)
+            query_in = query.filter(Contract.seller_id == company.id)
             # One round in Input and one round in Storage
-            query = query.filter(Contract.round_created <= game_session.current_round - 1)
-            contracts = query.all()
+            query_out = query_out.filter(Contract.round_created <= game_session.current_round - 1)
+            contracts_out = query_out.all()
+            contracts_in = query_in.all()
+
+            contracts = contracts_in + contracts_out
 
             # Calculate storage costs before we get new items in that round
             costs = 0
