@@ -165,6 +165,25 @@ def nextRound(session_id):
             session.add(company)
             session.commit()
 
+            # Brew beer
+            if company.type == 'Brewery':
+                try:
+                    hop = session.query(Storage).filter(Storage.company_id == company.id).filter(
+                        Storage.resource == 'Hop').one()
+                except NoResultFound:
+                    hop = Storage(company_id=company.id, resource='Hop', amount=0)
+                try:
+                    beer = session.query(Storage).filter(Storage.company_id == company.id).filter(
+                        Storage.resource == 'Beer').one()
+                except NoResultFound:
+                    beer = Storage(company_id=company.id, resource='Beer', amount=0)
+
+                beer.amount += hop.amount
+                hop.amount = 0
+                session.add(beer)
+                session.add(hop)
+                session.commit()
+
             for contract in contracts:
                 query = session.query(Storage).filter(Storage.resource == contract.resource)
                 try:
@@ -187,25 +206,6 @@ def nextRound(session_id):
                     session.add(resource_seller)
                     resource_buyer.amount += contract.amount
                     session.add(resource_buyer)
-                    session.commit()
-
-                # Brew beer
-                if company.type == 'Brewery':
-                    try:
-                        hop = session.query(Storage).filter(Storage.company_id == company.id).filter(
-                            Storage.resource == 'Hop').one()
-                    except NoResultFound:
-                        hop = Storage(company_id=company.id, resource='Hop', amount=0)
-                    try:
-                        beer = session.query(Storage).filter(Storage.company_id == company.id).filter(
-                            Storage.resource == 'Beer').one()
-                    except NoResultFound:
-                        beer = Storage(company_id=company.id, resource='Beer', amount=0)
-
-                    beer.amount += hop.amount
-                    hop.amount = 0
-                    session.add(beer)
-                    session.add(hop)
                     session.commit()
 
         return jsonify(game_session.serialize)
